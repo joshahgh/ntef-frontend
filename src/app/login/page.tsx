@@ -15,7 +15,10 @@ export default function LoginPage() {
     setMsg(null);
 
     try {
-      const res = await api.post("/auth/login", { email, password });
+     type LoginResponse = { token: string; role: "ADMIN" | "APPLICANT" };
+
+const res = await api.post<LoginResponse>("/auth/login", { email, password });
+
       setToken(res.data.token);
 
       // If admin, send to /admin, else /dashboard
