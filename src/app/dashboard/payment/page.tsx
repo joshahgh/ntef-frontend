@@ -10,7 +10,14 @@ export default function PaymentPage() {
   async function pay() {
     setMsg(null);
     try {
-      const res = await api.post("/payment/initiate", {}, { headers: authHeader() });
+      type PaystackInit = { authorization_url: string; reference: string };
+
+const res = await api.post<PaystackInit>(
+  "/payment/initiate",
+  {},
+  { headers: authHeader() }
+);
+
       // backend returns { authorization_url, reference }
       window.location.href = res.data.authorization_url;
     } catch {

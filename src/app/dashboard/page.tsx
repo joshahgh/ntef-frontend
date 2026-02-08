@@ -4,16 +4,25 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { authHeader, clearToken } from "@/lib/auth";
 
+type MyApplication = {
+  status?: string | null;
+  submittedAt?: string | null;
+  fullName?: string | null;
+  institution?: string | null;
+};
+
 export default function DashboardHome() {
-  const [app, setApp] = useState<any>(null);
+  const [app, setApp] = useState<MyApplication | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await api.get("/application/me", { headers: authHeader() });
-        setApp(res.data);
-      } catch (e: any) {
+        const data = await api<MyApplication>("/application/me", {
+          headers: { ...authHeader() },
+        });
+        setApp(data);
+      } catch {
         setErr("You are not logged in. Please login again.");
       }
     }
@@ -39,10 +48,8 @@ export default function DashboardHome() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-[#0B1F3B]">Dashboard</h1>
-      <p className="text-gray-700 mt-2">
-        Track your NTEF scholarship application status.
-      </p>
+      <h1 className="text-2xl font-bold text-[#0B1F3B]">Applicant Dashboard</h1>
+      <p className="text-gray-700 mt-2">Your NTEF application status updates here.</p>
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <div className="bg-white border rounded-2xl p-5">
@@ -64,6 +71,16 @@ export default function DashboardHome() {
           </div>
         </div>
       </div>
+
+      <button
+        className="mt-8 px-4 py-2 rounded border bg-white"
+        onClick={() => {
+          clearToken();
+          window.location.href = "/login";
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }

@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { authHeader } from "@/lib/auth";
 
+type MyApplication = {
+  fullName?: string | null;
+  institution?: string | null;
+  essay?: string | null;
+};
+
 export default function ApplicationPage() {
   const [fullName, setFullName] = useState("");
   const [institution, setInstitution] = useState("");
@@ -12,25 +18,32 @@ export default function ApplicationPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await api.get("/application/me", { headers: authHeader() });
-      setFullName(res.data.fullName ?? "");
-      setInstitution(res.data.institution ?? "");
-      setEssay(res.data.essay ?? "");
+      try {
+        const data = await api<MyApplication>("/application/me", {
+          headers: { ...authHeader() },
+        });
+
+        setFullName(data.fullName ?? "");
+        setInstitution(data.institution ?? "");
+        setEssay(data.essay ?? "");
+      } catch {
+        // If user isn't logged in or doesn't have app yet, ignore
+      }
     }
-    load().catch(() => {});
+    load();
   }, []);
 
   async function save() {
     setMsg(null);
     try {
-      await api.patch(
-        "/application/me",
-        { fullName, institution, essay },
-        { headers: authHeader() }
-      );
+      await api("/application/me", {
+        method: "PATCH",
+        headers: { ...authHeader() },
+        body: JSON.stringify({ fullName, institution, essay }),
+      });
       setMsg("Saved successfully ✅");
-    } catch {
-      setMsg("Save failed ❌ (Are you logged in?)");
+    } catch (e: any) {
+      setMsg(e?.message ?? "Save failed ❌");
     }
   }
 
@@ -38,7 +51,7 @@ export default function ApplicationPage() {
     <div className="max-w-3xl bg-white border rounded-2xl p-6">
       <h1 className="text-xl font-bold text-[#0B1F3B]">Application Form</h1>
       <p className="text-sm text-gray-600 mt-1">
-        Fill this and save. After that, go to Payment to pay ₦1,000 and submit.
+        Fill and save. Then go to Payment to pay ₦1,000 and submit.
       </p>
 
       {msg && (
